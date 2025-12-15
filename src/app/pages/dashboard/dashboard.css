@@ -1,0 +1,83 @@
+/* Whole Page */
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px; /* added padding for small screens */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* KPI + Gauge Layout */
+.top-metrics-group {
+  display: grid;
+  grid-template-columns: 3fr 1fr; /* KPI area + gauge */
+  gap: 20px;
+  width: 100%;
+}
+
+/* Make top-metrics-group stack on smaller screens */
+@media (max-width: 1024px) {
+  .top-metrics-group {
+    grid-template-columns: 1fr; /* stack KPI and gauge */
+  }
+}
+
+/* KPI Grid: flexible 3x2 */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 18px;
+  width: 95%;
+}
+
+kpi-tile .kpi-card {
+  height: 130px !important;
+}
+
+/* Gauge Container */
+.gauge-container {
+  height: 230px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90%;
+  box-sizing: border-box;
+}
+
+/* Gauge Chart Size */
+gauge-chart {
+  width: 100%;
+  height: 240px;
+}
+
+/* Graph Section */
+.graphs-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 22px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Make KPI + Graphs smaller on mobile */
+@media (max-width: 768px) {
+  .kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+  
+  .graphs-section {
+    grid-template-columns: 1fr; /* stack graphs */
+  }
+  
+  .gauge-container {
+    height: 200px;
+  }
+  
+  gauge-chart {
+    height: 200px;
+  }
+}

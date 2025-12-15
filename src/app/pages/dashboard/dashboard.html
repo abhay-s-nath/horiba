@@ -1,0 +1,42 @@
+<div class="dashboard-page">
+
+  <!-- KPI + GAUGE SECTION -->
+  <div class="top-metrics-group">
+
+    <!-- 3x2 KPI GRID -->
+    <div class="kpi-grid">
+      <kpi-tile *ngFor="let k of kpis"
+                [label]="k.label"
+                [value]="k.value"
+                [color]="k.color">
+      </kpi-tile>
+    </div>
+    
+
+
+    <!-- Gauge on the right -->
+    <div class="gauge-container">
+      <gauge-chart [value]="35"></gauge-chart>
+    </div>
+  </div>
+
+  <!-- GRAPHS SECTION -->
+   <div class="graphs-section">
+    <analytics-graph title="DAY DATE & TIME"
+      (dateFilterChanged)="applyDateFilter($event, 'day')"
+      [graphData]="dayGraph"
+      [tableData]="dayTable">
+    </analytics-graph>
+
+    <analytics-graph title="WEEK DATE & TIME"
+    [graphData]="weekGraph"
+    [tableData]="weekTable">
+    </analytics-graph>
+
+    <analytics-graph title="MONTH DATE & TIME"
+    [graphData]="monthGraph"
+    [tableData]="monthTable">
+    </analytics-graph>
+  </div> 
+
+</div>

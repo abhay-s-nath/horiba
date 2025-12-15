@@ -1,0 +1,119 @@
+.device-detail {
+  padding: 25px;
+  background: #eef2f7;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  margin-bottom: 30px;
+  color: #123b6b;
+}
+
+/* GRID LAYOUT */
+.main-grid {
+  display: grid;
+  grid-template-columns: 28% 36% 36%;
+  gap: 25px;
+}
+
+/* COLUMN 1 */
+.device-col {
+  text-align: center;
+  background: white;
+  padding: 20px 10px;
+  border-radius: 12px;
+  border: 1px solid #d1d4db;
+}
+
+.device-image {
+  width: 240px;    /* Bigger */
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.device-status-box {
+  margin-top: 15px;
+}
+
+.status-label {
+  font-size: 16px;
+  color: #546071;
+  font-weight: 600;
+}
+
+.status-online {
+  color: #0a8a1f;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.status-offline {
+  color: #c8102e;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.update-text {
+  margin-top: 10px;
+  color: #555;
+  font-size: 15px;
+}
+
+.update-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* CARD STYLE */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #d1d4db;
+}
+
+/* DEVICE READINGS */
+.device-readings h3,
+.sensor-section h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  color: #1e1e2f;
+  font-weight: 600;
+}
+
+.reading {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 16px;
+}
+
+/* SENSOR SECTION */
+.sensor-card {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.sensor-image {
+  width: 120px;   /* Larger */
+  height: 120px;
+  object-fit: contain;
+  margin-bottom: 6px;
+}
+
+.sensor-name {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.sensor-value {
+  font-size: 15px;
+  color: #444;
+}
+
+

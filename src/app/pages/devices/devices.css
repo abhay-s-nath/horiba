@@ -1,0 +1,32 @@
+.device-card {
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  text-align: center;
+  transition: 0.3s ease;
+}
+
+.device-card:hover {
+  transform: translateY(-5px);
+}
+
+.device-card img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.device-card h3 {
+  margin-top: 10px;
+  font-size: 18px;
+}
+
+.device-card p {
+  font-size: 14px;
+}
+
+.device-card .status {
+  font-weight: bold;
+}

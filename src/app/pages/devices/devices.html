@@ -1,0 +1,10 @@
+<h1 class="text-2xl font-bold mb-4">Devices</h1>
+
+<div class="grid grid-cols-3 gap-4">
+  <div class="device-card" *ngFor="let device of devices" (click)="goToDeviceDetail(device)">
+    <img [src]="device.imageUrl" alt="Device" class="device-image" />
+    <h3 class="font-bold text-xl">{{ device.name }}</h3>
+    <p>Status: <span [ngClass]="device.status === 'connected' ? 'text-green-500' : 'text-red-500'">{{ device.status | uppercase }}</span></p>
+    <p>Last updated: {{ device.lastUpdated | date:'short' }}</p>
+  </div>
+</div>

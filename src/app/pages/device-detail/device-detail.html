@@ -1,0 +1,41 @@
+<div class="device-detail">
+
+  <h1 class="title">{{ device.name }} Details</h1>
+
+  <div class="main-grid">
+
+    <!-- COLUMN 1: DEVICE INFO -->
+    <div class="device-col">
+      <img [src]="device.imageUrl" alt="Device" class="device-image" />
+      <div class="device-status-box">
+        <p class="status-label">Status</p>
+        <p [ngClass]="device.status === 'connected' ? 'status-online' : 'status-offline'">
+          {{ device.status | uppercase }}
+        </p>
+        <p class="update-text">Last Updated</p>
+        <p class="update-value">{{ device.lastUpdated | date:'short' }}</p>
+      </div>
+    </div>
+
+    <!-- COLUMN 2: DEVICE READINGS -->
+    <div class="device-readings card">
+      <h3>Device Readings</h3>
+      <div *ngFor="let reading of device.readings | keyvalue" class="reading">
+        <span class="reading-name">{{ reading.key }}</span>
+        <span class="reading-value">{{ reading.value }}</span>
+      </div>
+    </div>
+
+    <!-- COLUMN 3: SENSORS -->
+    <div class="sensor-section card">
+      <h3>Sensors</h3>
+      <div class="sensor-card" *ngFor="let sensor of device.sensors">
+        <img [src]="sensor.imageUrl" alt="Sensor" class="sensor-image" />
+        <p class="sensor-name">{{ sensor.name }}</p>
+        <p class="sensor-value">{{ sensor.value }} {{ sensor.unit }}</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>

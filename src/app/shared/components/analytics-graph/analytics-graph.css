@@ -1,0 +1,119 @@
+/* =========================================
+   analystic-graph.css (MODIFIED)
+   ========================================= */
+
+   .graph-container {
+    display: flex; /* Use flexbox for vertical stacking */
+    flex-direction: column;
+    height: 100%; /* Fill the parent <analytics-graph> component */
+    width: 100%;
+    
+    /* Card Styling (moved from dashboard.css) */
+    background: #ffffff;
+    border: 1px solid #e5e7eb; /* Lighter border */
+    border-radius: 8px; /* Clean rounded corners */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    padding: 16px; /* Spacing inside the card */
+    box-sizing: border-box;
+    overflow: hidden; /* Important for the Echarts canvas */
+  }
+  
+  /* Header Layout */
+  .graph-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 4px; /* Slight horizontal padding for alignment */
+  }
+  
+  /* Title Style */
+  .title {
+    font-size: 16px; /* Slightly larger */
+    font-weight: 600;
+    color: #374151; /* Darker, neutral color */
+    margin: 0;
+  }
+  
+  /* Filter Controls */
+  .filters {
+    display: flex;
+    gap: 8px; /* Slightly more space */
+    align-items: center;
+  }
+  
+  /* Date range input */
+  .date-input {
+    width: 150px;
+    background: #ffffff;
+    border: 1px solid #d1d5db; /* Lighter border */
+    border-radius: 4px;
+    height: 34px; /* Taller input */
+    padding: 0 10px;
+    font-size: 13px;
+    color: #4b4b4b;
+  }
+  
+  /* Filter Button */
+  .filter-btn {
+    height: 34px;
+    min-width: 70px; /* Wider button */
+    padding: 0 14px; /* Vertical padding removed, let height control it */
+    background-color: #1e3a8a; /* Darker, more prominent blue */
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  
+  .filter-btn:hover {
+    background-color: #0c4a6e;
+  }
+  
+  /* Chart Appearance */
+  .graph-box {
+    flex-grow: 1; /* Allow the chart box to fill remaining space */
+    width: 100%;
+    min-height: 200px; /* Ensure chart has a minimum size */
+    margin: 0; /* Remove top/bottom margin */
+  }
+  
+  /* Table Styling - CRITICAL FIX */
+  
+  /* Container for the table - ensures the dark background wraps the whole header */
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    text-align: center;
+    margin-top: auto; /* Push the table to the bottom of the flex container */
+  }
+  
+  /* Table Header (The Dark Blue Bar) */
+  .summary-table thead {
+    background: #1e3a8a; /* Dark blue background */
+    color: #ffffff;
+  }
+  
+  .summary-table th {
+    background: #1e3a8a; /* Keep this for compatibility */
+    color: #ffffff;
+    height: 30px; /* Slightly taller header */
+    padding: 6px 4px; /* More vertical padding */
+    font-weight: 600; /* Bolder text */
+    text-transform: uppercase; /* Match the style of the image */
+    border: 1px solid #1e3a8a; /* Border matching the background for seamless look */
+  }
+  
+  .summary-table td {
+    border: 1px solid #e5e7eb; /* Lighter border between rows */
+    height: 30px;
+    color: #2d2d2d;
+  }
+  
+  .summary-table tr:nth-child(even) {
+    background-color: #f9fafb; /* Lighter background for striped rows */
+  }

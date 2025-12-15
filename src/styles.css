@@ -1,0 +1,23 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import "tailwindcss";
+@import "@angular/material/prebuilt-themes/indigo-pink.css";
+
+@import "flatpickr/dist/flatpickr.min.css";
+@import "flatpickr/dist/themes/material_blue.css";   /* optional theme */
+
+
+
+
+html, body { height: 100%; }
+/* =======================================================
+   🌈 PREMIUM MULTICOLOR SAAS DASHBOARD THEME (SUPER MODERN)
+   ======================================================= */
+
+body {
+  background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+  font-family: 'Inter', sans-serif;
+  color: #1e293b;
+}
+
+/* Card Base */
