@@ -1,141 +1,200 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { KpiTile } from '../../shared/components/kpi-tile/kpi-tile';
 import { GaugeChartComponent } from '../../shared/components/gauge-chart/gauge-chart';
 import { AnalyticsGraph } from '../../shared/components/analytics-graph/analytics-graph';
-import { GlobalFilters } from '../../shared/components/global-filters/global-filters';
-import { NgIf, NgFor, CommonModule } from '@angular/common';
-import { SummaryTable } from '../../shared/components/summary-table/summary-table';
-
 import { LiveDataService } from '../../services/live-data.service';
-// Import the dummy data constants directly to use the table data 
-// (assuming you've implemented the dummy-logged-data.ts file)
-import { DAY_DATA, WEEK_DATA, MONTH_DATA } from '../../dummy-data/analytics';
-
-
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [
-    KpiTile,
-    GaugeChartComponent,
-    AnalyticsGraph,
-    CommonModule, // Already imported, moved up for clarity
-    GlobalFilters,
-    NgIf,
-    NgFor,
-    SummaryTable
-  ],
-  templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.css']
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    KpiTile,
+    GaugeChartComponent,
+    AnalyticsGraph,
+    MatProgressSpinnerModule
+  ],
+  templateUrl: './dashboard.html',
+  styleUrls: ['./dashboard.css']
 })
-export class Dashboard implements OnInit { // Implement OnInit
+export class Dashboard implements OnInit {
+  // KPI State
+  kpis: any[] = [];
+  kpisLoading = true;
 
-  kpis: any[] = [];
-  // Initialize as empty arrays, not just 'any'
-  dayGraph: any[] = []; dayTable: any[] = []; 
-  weekGraph: any[] = []; weekTable: any[] = []; 
-  monthGraph: any[] = []; monthTable: any[] = [];
+  // Graph and Table State
+  dayGraph: any[] = [];
+  dayTable: any[] = [];
+  weekGraph: any[] = [];
+  weekTable: any[] = [];
+  monthGraph: any[] = [];
+  monthTable: any[] = [];
 
-  constructor(private liveDataService: LiveDataService) { }
+  private cdr = inject(ChangeDetectorRef);
 
-  ngOnInit() {
-    this.loadKPIs(); 
-    // Load initial data for the three graphs when the component initializes
-    this.loadGraphData('day', '2025-01-01', '2025-01-02'); // Example day range
-    this.loadGraphData('week', '2025-01-01', '2025-01-08'); // Example week range
-    this.loadGraphData('month', '2025-01-01', '2025-01-31'); // Example month range
+  constructor(private liveDataService: LiveDataService) { }
+
+  ngOnInit(): void {
+    this.initDashboard();
   }
 
-  loadKPIs() {
-    // This function only handles KPI data. The old getLoggedData call is removed from here.
-    this.liveDataService.getLiveData().subscribe({
-      next: (res) => {
-        const devices = res.deviceData || [];
-
-        const total = devices.length;
-        const active = devices.filter((d: any) => d.deviceStatusId === 1).length;
-        const alarm = devices.filter((d: any) => d.alarmData && d.alarmData.length > 0).length;
-        const air = devices.filter((d: any) => d.deviceId >= 1 && d.deviceId <= 11).length;
-        const water = devices.filter((d: any) => d.deviceId >= 12).length;
-
-        this.kpis = [
-          { label: 'Total Devices', value: total, color: '#2371C7' },
-          { label: 'Air Devices', value: active, color: '#16a34a' },
-          { label: 'Water Devices', value: water, color: '#0891b2' },
-          { label: 'Connected Devices', value: air, color: '#2563eb' },
-          { label: 'Total Sensors', value: total, color: '#2371C7' },
-          { label: 'Connected Sensors', value: alarm, color: '#16a34a' },
-          { label: 'Disconnected Sensors', value: alarm, color: '#dc2626' },
-          { label: 'Disconnected Devices', value: alarm, color: '#dc2626' },
-        ];
-      },
-      error: () => {
-        this.kpis = [
-          { label: 'Total Devices', value: '--', color: 'gray' }
-        ];
-      }
-    });
-  }
-
-  // NEW FUNCTION: Fetches and processes data for a specific graph type
-  loadGraphData(type: 'day' | 'week' | 'month', startDate: string, endDate: string) {
-    let interval = 3600; // 1 hour for day/week
+  /**
+   * Initializes the dashboard with current date ranges
+   */
+  private initDashboard(): void {
+    this.loadKPIs();
+    
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    
+    const lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 7);
   
-    if (type === 'month') {
-        interval = 3600 * 24; // 1 day interval
-    }
+    const formatDate = (date: Date) => date.toISOString().split('T')[0];
+  
+    // Initial data fetch
+    this.loadGraphData('day', formatDate(yesterday), formatDate(today));
+    this.loadGraphData('week', formatDate(lastWeek), formatDate(today));
+    this.loadGraphData('month', '2025-12-01', formatDate(today));
+  }
+
+  /**
+   * Fetches and calculates KPI metrics from live device data
+   */
+  loadKPIs(): void {
+    this.kpisLoading = true;
+    this.liveDataService.getLiveData().subscribe({
+      next: (res) => {
+        const devices = res.deviceData || [];
+        const totalDevices = devices.length;
+        const airDevices = devices.filter((d: any) => d.deviceType === 'AAQMS Device');
+        const waterDevices = devices.filter((d: any) => d.deviceType === 'WQMS Device');
+        const connectedDevices = devices.filter((d: any) => d.deviceStatusId === 1).length;
+        const disconnectedDevices = totalDevices - connectedDevices;
+  
+        let totalSensors = 0;
+        let connectedSensors = 0; 
+        
+        devices.forEach((d: any) => {
+          if (d.analyzerData) {
+            totalSensors += d.analyzerData.length;
+            connectedSensors += d.analyzerData.filter((a: any) => a.isValid === 1).length;
+          }
+        });
+        
+        const disconnectedSensors = totalSensors - connectedSensors;
+  
+        this.kpis = [
+          { label: 'Total Devices', value: totalDevices, color: '#2371C7' },
+          { label: 'Air Devices', value: airDevices.length, color: '#16a34a' },
+          { label: 'Water Devices', value: waterDevices.length, color: '#0891b2' },
+          { label: 'Connected Devices', value: connectedDevices, color: '#2563eb' },
+          { label: 'Disconnected Devices', value: disconnectedDevices, color: '#dc2626' },
+          { label: 'Total Sensors', value: totalSensors, color: '#2371C7' },
+          { label: 'Connected Sensors', value: connectedSensors, color: '#16a34a' },
+          { label: 'Disconnected Sensors', value: disconnectedSensors, color: '#dc2626' },
+        ];
+
+        this.kpisLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.kpisLoading = false;
+        console.error('CRITICAL: KPI Data Load Failed', err);
+        this.kpis = [{ label: 'Error', value: '--', color: 'gray' }];
+      }
+    });
+  }
+
+  /**
+   * Fetches historical data and routes it to the correct graph state
+   */
+  loadGraphData(type: 'day' | 'week' | 'month', startDate: string, endDate: string): void {
+    const interval = type === 'month' ? 86400 : 3600;
   
     this.liveDataService.getLoggedData(startDate, endDate, interval).subscribe({
-      next: (res) => {
-        try {
-          // Step 1: Parse the string response. This is your graph data array.
-          const graphArray = JSON.parse(res); 
-          
-          let tableArray: any[] = [];
-          let targetGraph: any[] = [];
-          let targetTable: any[] = [];
-  
-          // Step 2: Determine which set of dummy table data to use and assign to local variables
-          if (type === 'day') {
-            tableArray = DAY_DATA.table;
-            targetGraph = this.dayGraph; 
-            targetTable = this.dayTable;
-          } else if (type === 'week') {
-            tableArray = WEEK_DATA.table;
-            targetGraph = this.weekGraph;
-            targetTable = this.weekTable;
-          } else if (type === 'month') {
-            tableArray = MONTH_DATA.table;
-            targetGraph = this.monthGraph;
-            targetTable = this.monthTable;
-          }
-  
-          // Step 3: Assign the data to the component properties to trigger graph and table updates
-          // NOTE: We assign the parsed array directly to the graph property
-          if (type === 'day') {
-            this.dayGraph = graphArray;
-            this.dayTable = tableArray;
-          } else if (type === 'week') {
-            this.weekGraph = graphArray;
-            this.weekTable = tableArray;
-          } else if (type === 'month') {
-            this.monthGraph = graphArray;
-            this.monthTable = tableArray;
-          }
-  
-        } catch (e) {
-          console.error(`Error parsing or assigning logged data for ${type}:`, e);
+      next: (res: any) => {
+        let parsedData: any[] = [];
+
+        // Determine if response is Array of Strings (CSV) or Raw String
+        if (Array.isArray(res) && res.length > 0) {
+          parsedData = this.parseCsvArray(res);
+        } else if (typeof res === 'string' && res.trim() !== '') {
+          const lines = res.split(/\r?\n/).filter(l => l.trim() !== '');
+          parsedData = this.parseCsvArray(lines);
         }
+
+        if (!parsedData || parsedData.length === 0) {
+          console.warn(`⚠️ Dashboard [${type}]: Response received but no valid rows parsed.`);
+          return;
+        }
+
+        // Production-level state update using fresh references
+        const dataUpdate = [...parsedData];
+        
+        switch (type) {
+          case 'day':
+            this.dayGraph = dataUpdate;
+            this.dayTable = dataUpdate;
+            break;
+          case 'week':
+            this.weekGraph = dataUpdate;
+            this.weekTable = dataUpdate;
+            break;
+          case 'month':
+            this.monthGraph = dataUpdate;
+            this.monthTable = dataUpdate;
+            break;
+        }
+
+        console.log(`✅ Dashboard [${type}]: Successfully loaded ${parsedData.length} records.`);
+        this.cdr.detectChanges();
       },
-      error: (err) => console.error(`Logged Data Error for ${type}:`, err)
+      error: (err) => {
+        console.error(`❌ Dashboard [${type}]: Request failed`, err);
+      }
     });
   }
   
-  // Handled by the EventEmitter from the analytics-graph component
-  applyDateFilter(range: { start: string, end: string }, type: 'day' | 'week' | 'month') {
-    console.log(`Applying filter for ${type}:`, range);
-    // Reload the data for the specific graph type with the new date range
-    this.loadGraphData(type, range.start, range.end);
+  /**
+   * Core Parser: Converts Array of CSV strings into JSON objects
+   */
+  private parseCsvArray(rows: string[]): any[] {
+    if (!rows || rows.length < 2) return [];
+  
+    // Extract headers from index 0
+    const headers = rows[0].split(',').map(h => h.trim());
+  
+    return rows.slice(1).map((row, rowIndex) => {
+      const values = row.split(',');
+      const obj: any = {};
+      
+      headers.forEach((header, index) => {
+        const rawVal = values[index] ? values[index].trim() : '';
+        
+        // Logical conversion: Only columns that aren't Date/Time should be numbers
+        if (header !== 'Date' && header !== 'Time' && rawVal !== '' && !isNaN(Number(rawVal))) {
+          obj[header] = Number(rawVal);
+        } else {
+          obj[header] = rawVal || null;
+        }
+      });
+  
+      // Ensure name field exists for ECharts Axis (Map from backend 'Time')
+      obj['name'] = obj['Time'] || `Point ${rowIndex}`;
+      return obj;
+    }).filter(item => item['Date'] !== null); // Clean up any trailing empty rows
+  }
+
+  /**
+   * Filter trigger from UI datepicker
+   */
+  applyDateFilter(range: { start: string, end: string }, type: 'day' | 'week' | 'month'): void {
+    if (range.start && range.end) {
+      this.loadGraphData(type, range.start, range.end);
+    }
   }
 }

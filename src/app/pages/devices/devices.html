@@ -1,10 +1,50 @@
-<h1 class="text-2xl font-bold mb-4">Devices</h1>
+<div class="header-section mb-6">
+  <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">System Devices</h1>
+  @if (lastUpdated) {
+    <div class="flex items-center gap-2 mt-1">
+      <span class="relative flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+      </span>
+      <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">
+        Live Sync: {{ lastUpdated | date:'mediumTime' }}
+      </p>
+    </div>
+  }
+</div>
 
-<div class="grid grid-cols-3 gap-4">
-  <div class="device-card" *ngFor="let device of devices" (click)="goToDeviceDetail(device)">
-    <img [src]="device.imageUrl" alt="Device" class="device-image" />
-    <h3 class="font-bold text-xl">{{ device.name }}</h3>
-    <p>Status: <span [ngClass]="device.status === 'connected' ? 'text-green-500' : 'text-red-500'">{{ device.status | uppercase }}</span></p>
-    <p>Last updated: {{ device.lastUpdated | date:'short' }}</p>
-  </div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  @for (device of devices; track device.deviceId) {
+    <div class="modern-device-card group" (click)="goToDeviceDetail(device)">
+      <div class="image-wrapper">
+        <img [src]="'https://static.horiba.com/fileadmin/Horiba/_processed_/9/5/csm_APNA-380_fr_li_Product_5d5ee0bab1.png'" 
+             [alt]="device.deviceName" />
+        <div class="status-badge" [class.online]="device.deviceStatusId === 1">
+           {{ device.deviceStatusId === 1 ? 'Online' : 'Offline' }}
+        </div>
+      </div>
+
+      <div class="p-5">
+        <h3 class="device-title">{{ device.deviceName }}</h3>
+        
+        <div class="analyzer-grid">
+          @for (sensor of device.analyzerData.slice(0, 2); track sensor.analyzerId) {
+            <div class="sensor-pill">
+              <span class="sensor-label">{{ sensor.analyzerName }}</span>
+              <span class="sensor-value">{{ sensor.analyzerValue }} <small>{{ sensor.analyzerUnit }}</small></span>
+            </div>
+          }
+        </div>
+
+        <div class="card-footer">
+          <span class="view-link">View Analytics</span>
+          <i class="chevron-icon">→</i>
+        </div>
+      </div>
+    </div>
+  } @empty {
+    <div class="col-span-full py-20 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+      <p class="text-slate-400 font-medium">No active devices detected in the network.</p>
+    </div>
+  }
 </div>

@@ -4,13 +4,25 @@
   <div class="top-metrics-group">
 
     <!-- 3x2 KPI GRID -->
-    <div class="kpi-grid">
-      <kpi-tile *ngFor="let k of kpis"
-                [label]="k.label"
-                [value]="k.value"
-                [color]="k.color">
-      </kpi-tile>
-    </div>
+    @if (kpisLoading) {
+      <mat-progress-spinner 
+      color="primary" 
+      mode="indeterminate" 
+      diameter="50" 
+      class="mx-auto my-5" />
+    } @else {
+      <div class="kpi-grid">
+        @for (k of kpis; track k.label) {
+          <kpi-tile 
+            [label]="k.label"
+            [value]="k.value"
+            [color]="k.color">
+          </kpi-tile>
+        } @empty {
+          <p>No KPIs available.</p> 
+        }
+      </div>
+    }
     
 
 

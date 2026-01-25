@@ -1,42 +1,40 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { NgFor, NgIf } from '@angular/common';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, AfterViewInit, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
+import { NgFor, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import flatpickr from 'flatpickr';
-import { Output, EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'analytics-graph',
   standalone: true,
-  imports: [NgFor, NgIf, FormsModule, NgxEchartsDirective],
+  imports: [CommonModule, NgFor, FormsModule, NgxEchartsDirective],
   templateUrl: './analytics-graph.html',
   styleUrls: ['./analytics-graph.css']
 })
-// Implement OnChanges to detect when data arrives
 export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
 
   @Input() title = "";
-  // The setter will automatically trigger updateGraph when data is passed in
+  
+  // Using a setter to trigger updates when data flows in
   @Input() set graphData(data: any[]) {
-      this._graphData = data;
-      // Only update the graph if data is present
-      if (data && data.length > 0) {
-        setTimeout(() => { 
-          this.updateGraph(); 
-      }, 50);      }
+    this._graphData = data;
+    if (data && data.length > 0) {
+      // Use requestAnimationFrame or setTimeout to ensure the DOM is ready for ECharts
+      setTimeout(() => this.updateGraph(), 50);
+    }
   }
   get graphData(): any[] {
-      return this._graphData;
+    return this._graphData;
   }
   private _graphData: any[] = [];
 
-  @Input() tableData: any[] = []; // tableData automatically updates the HTML via ngFor
+  @Input() tableData: any[] = []; 
 
   @Output() dateFilterChanged = new EventEmitter<{ start: string, end: string }>();
 
   @ViewChild('datepicker', { static: false }) datepicker!: ElementRef;
 
-  options: any; // ECharts options object
+  options: any; 
 
   SENSOR_COLORS = {
     co: '#ffa600',
@@ -47,19 +45,14 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
   };
 
   ngOnInit() {
-    // Initialize with a basic, empty chart structure
     this.updateGraph(); 
   }
 
-  // Use OnChanges to listen for initial data load or update
   ngOnChanges(changes: SimpleChanges): void {
-      if (changes['graphData'] && changes['graphData'].currentValue.length > 0) {
-          // The setter handles the update, but this ensures tableData is also reflected
-          // if it changes separately.
-          setTimeout(() => {
-            this.updateGraph();
-        }, 50);
-      }
+    // Detect changes in tableData or graphData updates
+    if ((changes['graphData'] && !changes['graphData'].firstChange) || changes['tableData']) {
+      this.updateGraph();
+    }
   }
 
   ngAfterViewInit() {
@@ -72,100 +65,90 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
 
   applyFilter() {
     const dateInput: string = this.datepicker.nativeElement.value;
-
     if (!dateInput || !dateInput.includes("to")) {
       console.warn("Invalid date range selected");
       return;
     }
-
     const [start, end] = dateInput.split("to").map(d => d.trim());
-
     this.dateFilterChanged.emit({ start, end });
-    console.log("Emitted:", { start, end });
   }
 
-  // NEW METHOD: Contains all ECharts configuration logic
+  /**
+   * Helper to find a value in the data object even if the key is a long string 
+   * (e.g., finding "CO" inside "Airmo-VOC-BTEX_1.3 Butadine")
+   */
+  private getValueByKeyword(dataObj: any, keyword: string): number {
+    const key = Object.keys(dataObj).find(k => k.toLowerCase().includes(keyword.toLowerCase()));
+    return key ? dataObj[key] : 0;
+  }
+
   updateGraph() {
-    const xLabels = this.graphData.map(d => d.time ?? d.day);
-
-    // Select dynamic subtitle based on card title
-    const subText =
-      this.title.includes("DAY") ? "Data (hourly)" :
-      this.title.includes("WEEK") ? "Data (hourly for 7 days)" :
-      "Data (hourly for the last 30 days)";
-
+    if (!this.graphData || this.graphData.length === 0) {
+      this.options = {};
+      return;
+    }
+  
+    const allKeys = Object.keys(this.graphData[0]);
+    const sensorKeys = allKeys.filter(key => 
+      !['Date', 'Time', 'name', 'displayTime'].includes(key)
+    );
+  
+    // 1. Table Statistics (Now working in your screenshot)
+    this.tableData = sensorKeys.map(key => {
+      const values = this.graphData.map(d => d[key]).filter(v => typeof v === 'number');
+      return {
+        component: key,
+        avg: values.length ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2) : '--',
+        min: values.length ? Math.min(...values).toFixed(2) : '--',
+        max: values.length ? Math.max(...values).toFixed(2) : '--',
+        limit: 'N/A',
+        unit: 'ppm'
+      };
+    });
+  
+    // 2. Clean Graph Series
+    const dynamicSeries = sensorKeys.map(key => ({
+      name: key,
+      type: 'line',
+      data: this.graphData.map(d => d[key] ?? 0),
+      symbol: 'circle', 
+      symbolSize: 4,      // Small dots at data points
+      smooth: false,      // CRITICAL: Set to false to remove "wavy" artificial curves
+      lineStyle: { 
+        width: 1.5,
+        opacity: 0.7      // Slight transparency helps see overlapping lines
+      }
+    }));
+  
+    // 3. Optimized Layout Options
     this.options = {
-      tooltip: { trigger: 'axis' },
-
-      title: {
-        text: `Air Quality & Sensor Readings — ${this.title.includes("DAY") ? "1 Day" :
-                                                this.title.includes("WEEK") ? "1 Week" : "1 Month"}`,
-        left: 12,
-        top: 8,
-        textStyle: {
-          fontSize: 14,
-          fontWeight: 600,
-          color: "#2b2b2b"
-        },
-        subtext: subText,
-        subtextStyle: {
-          fontSize: 11,
-          color: "#777"
-        }
-      },
-
+      animation: false,   // Better performance for 70+ lines
+      tooltip: { trigger: 'axis', confine: true },
       legend: {
-        top: 40,
+        type: 'scroll',
+        top: 0, // Keep legend at the very top
+        padding: [0, 5]
+      },
+      grid: { 
+        top: 40,    // Space for legend
+        bottom: 40, // Reduced from 80. This is the "Gap" creator!
+        left: 45,   
         right: 15,
-        itemHeight: 8,
-        itemWidth: 14,
-        textStyle: {
-          fontSize: 11,
-          color: "#333"
-        }
+        containLabel: true 
       },
-
-      grid: {
-        top: 95,
-        left: 45,
-        right: 35,
-        bottom: 50
-      },
-
       xAxis: {
         type: 'category',
-        boundaryGap: false,
-        axisLabel: {
+        data: this.graphData.map(d => d.name),
+        axisLabel: { 
+          rotate: 0, // If you have few points, keep it 0 to save space
           fontSize: 10,
-          color: "#555",
-          rotate: 0
-        },
-        data: xLabels // Populated from the current graphData
-      },
-
-      yAxis: {
+          margin: 8 // Space between axis and labels
+        }},
+      yAxis: { 
         type: 'value',
-        name: "Measurement (units/day)",
-        nameLocation: "middle",
-        nameTextStyle: {
-          fontSize: 11,
-          color: "#555"
-        },
-        nameGap: 45,
-        axisLabel: {
-          fontSize: 10,
-          color: "#555"
-        }
+        splitLine: { lineStyle: { type: 'dashed' } }
       },
-
-      series: [
-        // Ensure data keys match the dummy data (d.co, d.so2, etc.)
-        { name: 'CO', type: 'line', data: this.graphData.map(d => d.co), color: this.SENSOR_COLORS.co, symbolSize: 3, lineStyle: { width: 1.8 } },
-        { name: 'SO₂', type: 'line', data: this.graphData.map(d => d.so2), color: this.SENSOR_COLORS.so2, symbolSize: 3, lineStyle: { width: 1.8 } },
-        { name: 'NOx', type: 'line', data: this.graphData.map(d => d.nox), color: this.SENSOR_COLORS.nox, symbolSize: 3, lineStyle: { width: 1.8 } },
-        { name: 'PM10', type: 'line', data: this.graphData.map(d => d.pm10), color: this.SENSOR_COLORS.pm10, symbolSize: 3, lineStyle: { width: 1.8 } },
-        { name: 'PM2.5', type: 'line', data: this.graphData.map(d => d.pm25), color: this.SENSOR_COLORS.pm25, symbolSize: 3, lineStyle: { width: 1.8 } },
-      ]
+      series: dynamicSeries
     };
   }
 }

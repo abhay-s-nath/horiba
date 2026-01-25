@@ -1,10 +1,10 @@
 import { Component, Input } from '@angular/core';
-import { GaugeChartComponent } from '../gauge-chart/gauge-chart';
+// import { GaugeChartComponent } from '../gauge-chart/gauge-chart';
 
 @Component({
   selector: 'kpi-tile',
   standalone: true,
-  imports:[GaugeChartComponent],
+  // imports:[GaugeChartComponent],
   templateUrl: './kpi-tile.html',
   styleUrls: ['./kpi-tile.css']
 })

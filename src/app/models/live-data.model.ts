@@ -1,20 +1,33 @@
+export interface AnalyzerRange {
+  analyzerRangeId: number;
+  rangeValue: number;
+  isSelected: number;
+}
+
 export interface AnalyzerData {
   analyzerId: number;
   analyzerName: string;
   analyzerValue: number;
-  analyzerUnit: string;
+  // Use 'string | null' because some sensors (like pH or Ethylbenz) don't have units in your JSON
+  analyzerUnit: string | null; 
   analyzerType: string;
+  analyzerRegulationLimit: number | null;
   isValid: number;
-  analyzerRangesValue: any[];
+  // Stronger typing for the ranges array
+  analyzerRangesValue: AnalyzerRange[];
 }
 
 export interface DeviceData {
   deviceId: number;
   deviceName: string;
-  analyzerData: AnalyzerData[];
+  deviceTypeId: number;
+  deviceType: string;
+  deviceImagePath: string;
   deviceStatusId: number;
   deviceOperationId: number;
-  alarmData: any[];
+  // The API shows this as null in the current response
+  alarmData: any | null; 
+  analyzerData: AnalyzerData[];
 }
 
 export interface LiveDataResponse {
