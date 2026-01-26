@@ -94,3 +94,52 @@
 .summary-table tr:nth-child(even) {
   background-color: #f8fafc;
 }
+
+.filter-btn {
+  background-color: #1e3a8a;
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  height: 36px;
+  text-align: center; /* Centers the content horizontally */
+  line-height: normal;
+}
+
+.filter-btn:hover:not(:disabled) {
+  background-color: #47588d; 
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* DISABLED STATE - Crucial for your requirement */
+.filter-btn:disabled {
+  background-color: #e2e8f0 !important; /* Muted grey */
+  color: #94a3b8 !important;            /* Muted text */
+  cursor: not-allowed !important;
+  pointer-events: none;                 /* Blocks click events */
+}
+
+/* Loader Animation */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block; /* Allows width/height and stays on one line */
+  vertical-align: middle; /* Aligns middle of spinner with middle of text */
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+
+
