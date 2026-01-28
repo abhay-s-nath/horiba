@@ -14,12 +14,11 @@ import flatpickr from 'flatpickr';
 export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
 
   @Input() title = "";
-  
-  // Using a setter to trigger updates when data flows in
+  @Input() isLoading: boolean = false;
+
   @Input() set graphData(data: any[]) {
     this._graphData = data;
     if (data && data.length > 0) {
-      // Use requestAnimationFrame or setTimeout to ensure the DOM is ready for ECharts
       setTimeout(() => this.updateGraph(), 50);
     }
   }
@@ -49,7 +48,6 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Detect changes in tableData or graphData updates
     if ((changes['graphData'] && !changes['graphData'].firstChange) || changes['tableData']) {
       this.updateGraph();
     }
@@ -73,14 +71,6 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
     this.dateFilterChanged.emit({ start, end });
   }
 
-  /**
-   * Helper to find a value in the data object even if the key is a long string 
-   * (e.g., finding "CO" inside "Airmo-VOC-BTEX_1.3 Butadine")
-   */
-  private getValueByKeyword(dataObj: any, keyword: string): number {
-    const key = Object.keys(dataObj).find(k => k.toLowerCase().includes(keyword.toLowerCase()));
-    return key ? dataObj[key] : 0;
-  }
 
   updateGraph() {
     if (!this.graphData || this.graphData.length === 0) {
@@ -93,7 +83,6 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
       !['Date', 'Time', 'name', 'displayTime'].includes(key)
     );
   
-    // 1. Table Statistics (Now working in your screenshot)
     this.tableData = sensorKeys.map(key => {
       const values = this.graphData.map(d => d[key]).filter(v => typeof v === 'number');
       return {
@@ -106,32 +95,30 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
       };
     });
   
-    // 2. Clean Graph Series
     const dynamicSeries = sensorKeys.map(key => ({
       name: key,
       type: 'line',
       data: this.graphData.map(d => d[key] ?? 0),
       symbol: 'circle', 
-      symbolSize: 4,      // Small dots at data points
-      smooth: false,      // CRITICAL: Set to false to remove "wavy" artificial curves
+      symbolSize: 4,     
+      smooth: false,
       lineStyle: { 
         width: 1.5,
-        opacity: 0.7      // Slight transparency helps see overlapping lines
+        opacity: 0.7
       }
     }));
   
-    // 3. Optimized Layout Options
     this.options = {
-      animation: false,   // Better performance for 70+ lines
+      animation: false,
       tooltip: { trigger: 'axis', confine: true },
       legend: {
         type: 'scroll',
-        top: 0, // Keep legend at the very top
+        top: 0, 
         padding: [0, 5]
       },
       grid: { 
-        top: 40,    // Space for legend
-        bottom: 40, // Reduced from 80. This is the "Gap" creator!
+        top: 40,    
+        bottom: 40, 
         left: 45,   
         right: 15,
         containLabel: true 
@@ -140,9 +127,9 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
         type: 'category',
         data: this.graphData.map(d => d.name),
         axisLabel: { 
-          rotate: 0, // If you have few points, keep it 0 to save space
+          rotate: 0, 
           fontSize: 10,
-          margin: 8 // Space between axis and labels
+          margin: 8 
         }},
       yAxis: { 
         type: 'value',
