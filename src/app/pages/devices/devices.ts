@@ -13,7 +13,6 @@ import { Subscription, interval } from 'rxjs';
   styleUrls: ['./devices.css']
 })
 export class DevicesComponent implements OnInit, OnDestroy {
-  // Use inject() for a cleaner, modern dependency injection style
   private deviceService = inject(DeviceService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -25,21 +24,16 @@ export class DevicesComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadData();
     
-    // Refresh data every 30 seconds
     this.dataSubscription = interval(30000).subscribe(() => this.loadData());
   }
 
   loadData() {
     this.deviceService.getLiveData().subscribe({
       next: (response: LiveDataResponse) => {
-        console.log('API Response:', response);
-        
-        // Extract the deviceData array from the root object
         if (response && response.deviceData) {
           this.devices = response.deviceData;
           this.lastUpdated = response.dateTime;
           
-          // Force Angular to update the UI with the 13 devices found in the console
           this.cdr.detectChanges();
         }
       },
@@ -48,7 +42,6 @@ export class DevicesComponent implements OnInit, OnDestroy {
   }
 
   goToDeviceDetail(device: DeviceData) {
-    // Navigate using deviceId from your model
     this.router.navigate(['/device-detail', device.deviceId]);
   }
 

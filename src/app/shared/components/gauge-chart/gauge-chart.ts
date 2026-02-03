@@ -1,86 +1,109 @@
-import { Component, Input, OnInit, AfterViewInit } from '@angular/core';
-import { NgxEchartsDirective } from 'ngx-echarts';
-import * as echarts from 'echarts/core';
-import { GaugeChart as EChartsGaugeChart } from 'echarts/charts';
-import { TooltipComponent, TitleComponent } from 'echarts/components';
-import { CanvasRenderer } from 'echarts/renderers';
+import { Component, Input, OnInit, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HighchartsChartModule } from 'highcharts-angular';
+import * as Highcharts from 'highcharts';
+import HighchartsMore from 'highcharts/highcharts-more';
 
-echarts.use([
-  EChartsGaugeChart,
-  TooltipComponent,
-  TitleComponent,
-  CanvasRenderer
-]);
+HighchartsMore(Highcharts);
 
 @Component({
   selector: 'gauge-chart',
   standalone: true,
-  imports: [NgxEchartsDirective],
+  imports: [CommonModule, HighchartsChartModule],
   templateUrl: './gauge-chart.html',
   styleUrls: ['./gauge-chart.css']
 })
 export class GaugeChartComponent implements OnInit, AfterViewInit {
+  Highcharts: typeof Highcharts = Highcharts;
+  chartOptions: Highcharts.Options = {};
+  updateFlag: boolean = false;
+  chartInstance!: Highcharts.Chart;
 
-  @Input() value: number = 50;
-  options: any;
+  @Input() set value(val: number) {
+    this._value = val;
+    this.updateChart();
+  }
+  get value(): number { return this._value; }
+  private _value: number = 50;
+
+  constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
+    this.updateChart();
+  }
 
-    this.options = {
+  chartCallback: Highcharts.ChartCallbackFunction = (chart) => {
+    this.chartInstance = chart;
+  };
+
+  updateChart() {
+    this.chartOptions = {
+      chart: {
+        type: 'gauge',
+        backgroundColor: 'transparent',
+        height: 220,
+        spacingTop: 0,
+        spacingBottom: 0
+      },
       title: {
         text: 'Frequency Hz',
-        left: '2%',
-        top: '5%',
-        textStyle: {
-          fontSize: 16,
-          fontWeight: '600',
-          color: '#333'
-        }
+        align: 'left',
+        x: 10,
+        y: 20,
+        style: { fontSize: '16px', fontWeight: '600', color: '#333' }
       },
-      series: [
-        {
-          type: 'gauge',
-          min: 0,
-          max: 100,
-
-
-          axisLine: {
-
-            lineStyle: {
-              width: 16,
-              color: [
-                [0.4, '#4CAF50'], // Green
-                [0.7, '#FFC107'], // Yellow
-                [1,   '#FF5252']  // Red
-              ]
-            }
-          },
-
-          pointer: {
-            width: 4,
-            itemStyle: { color: '#555' }
-          },
-
-          tick: { show: false },
-          splitLine: { show: false },
-
-          detail: {
-            formatter: '{value} Hz',
-            fontSize: 22,
-            fontWeight: 'bold',
-            color: '#000',
-            offsetCenter: [0, '60%']
-          },
-
-          data: [{ value: this.value }]
+      credits: { enabled: false },
+      pane: {
+        startAngle: -90,
+        endAngle: 90,
+        background: undefined,
+        center: ['50%', '85%'],
+        size: '110%'
+      },
+      yAxis: {
+        min: 0,
+        max: 100,
+        tickPixelInterval: 50,
+        minorTickLength: 0,
+        tickLength: 0,
+        labels: {
+          distance: 25,
+          style: { fontSize: '12px', color: '#333' }
+        },
+        plotBands: [
+          { from: 0, to: 40, color: '#4CAF50', thickness: 25 },
+          { from: 40, to: 70, color: '#FFC107', thickness: 25 },
+          { from: 70, to: 100, color: '#FF5252', thickness: 25 }
+        ]
+      },
+      series: [{
+        name: 'Frequency',
+        type: 'gauge',
+        data: [this.value],
+        pointer: {
+          width: 4,
+          baseWidth: 8,
+          color: '#333',
+          length: '80%'
+        },
+        dataLabels: {
+          format: '{y} Hz',
+          borderWidth: 0,
+          y: -25,
+          style: { fontSize: '20px', fontWeight: 'bold', color: '#000' }
         }
-      ]
+      } as any]
     };
+  
+    this.updateFlag = true;
+    this.cdr.detectChanges();
   }
 
   ngAfterViewInit() {
     setTimeout(() => {
-      window.dispatchEvent(new Event('resize'));
+      if (this.chartInstance) {
+        this.chartInstance.reflow();
+      }
     }, 300);
   }
 }

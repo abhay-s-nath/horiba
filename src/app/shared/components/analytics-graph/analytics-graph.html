@@ -1,37 +1,28 @@
 <div class="graph-container">
-
-  <!-- HEADER SECTION -->
   <div class="graph-header">
-
     <h3 class="title">{{ title }}</h3>
-
     <div class="filters">
-      <input
-  #datepicker
-  class="date-input"
-  placeholder="Start – End"
-/>
-
-
-
-<button 
-  class="filter-btn" 
-  (click)="applyFilter()" 
-  [disabled]="isLoading">
-  
-  <div *ngIf="isLoading" class="spinner"></div>
-  <span *ngIf="!isLoading">FILTER</span>
-</button>
-
-
+      <input #datepicker #dateInput class="date-input" placeholder="Start – End" readonly />
+      
+      <button class="filter-btn" (click)="applyFilter(dateInput.value)" [disabled]="isLoading">
+        <div *ngIf="isLoading" class="spinner"></div>
+        <span *ngIf="!isLoading">FILTER</span>
+      </button>
     </div>
-
   </div>
 
-  <!-- GRAPH -->
-  <div echarts class="graph-box" [options]="options"></div>
+  <div class="graph-box">
+    <highcharts-chart 
+      *ngIf="chartOptions.series"
+      [Highcharts]="Highcharts"
+      [options]="chartOptions"
+      [callbackFunction]="chartCallback"
+      [(update)]="updateFlag"
+      [oneToOne]="oneToOneFlag"
+      style="width: 100%; height: 320px; display: block;">
+    </highcharts-chart>
+  </div>
 
-  <!-- TABLE SECTION -->
   <table class="summary-table">
     <thead>
       <tr>
@@ -43,10 +34,9 @@
         <th>Unit</th>
       </tr>
     </thead>
-
     <tbody>
       <tr *ngFor="let row of tableData">
-        <td style="text-align: left; padding-left: 8px;">{{ row.component }}</td>
+        <td>{{ row.component }}</td>
         <td>{{ row.avg }}</td>
         <td>{{ row.min }}</td>
         <td>{{ row.max }}</td>
@@ -55,5 +45,4 @@
       </tr>
     </tbody>
   </table>
-
 </div>

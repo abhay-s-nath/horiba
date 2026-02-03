@@ -150,7 +150,7 @@ export class Dashboard implements OnInit {
             break;
         }
 
-        console.log(`✅ Dashboard [${type}]: Successfully loaded ${parsedData.length} records.`);
+        // console.log(`✅ Dashboard [${type}]: Successfully loaded ${parsedData.length} records.`);
         this.cdr.detectChanges();
       },
       error: (err) => {

@@ -1,17 +1,24 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, AfterViewInit, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, AfterViewInit, ViewChild, ElementRef, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { NgFor, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgxEchartsDirective } from 'ngx-echarts';
+import { HighchartsChartModule } from 'highcharts-angular';
+import * as Highcharts from 'highcharts';
 import flatpickr from 'flatpickr';
 
 @Component({
   selector: 'analytics-graph',
   standalone: true,
-  imports: [CommonModule, NgFor, FormsModule, NgxEchartsDirective],
+  imports: [CommonModule, NgFor, FormsModule, HighchartsChartModule],
   templateUrl: './analytics-graph.html',
   styleUrls: ['./analytics-graph.css']
 })
 export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
+  Highcharts: typeof Highcharts = Highcharts;
+  chartOptions: Highcharts.Options = {};
+  
+  chartInstance!: Highcharts.Chart;
+  updateFlag: boolean = false; 
+  oneToOneFlag: boolean = true; 
 
   @Input() title = "";
   @Input() isLoading: boolean = false;
@@ -19,29 +26,21 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
   @Input() set graphData(data: any[]) {
     this._graphData = data;
     if (data && data.length > 0) {
-      setTimeout(() => this.updateGraph(), 50);
+      this.updateGraph();
     }
   }
-  get graphData(): any[] {
-    return this._graphData;
-  }
+  get graphData(): any[] { return this._graphData; }
   private _graphData: any[] = [];
 
   @Input() tableData: any[] = []; 
-
   @Output() dateFilterChanged = new EventEmitter<{ start: string, end: string }>();
-
   @ViewChild('datepicker', { static: false }) datepicker!: ElementRef;
 
-  options: any; 
-
-  SENSOR_COLORS = {
-    co: '#ffa600',
-    so2: '#00c5ff',
-    nox: '#ff0055',
-    pm10: '#8c4af0',
-    pm25: '#27ae60'
+  SENSOR_COLORS: { [key: string]: string } = {
+    co: '#ffa600', so2: '#00c5ff', nox: '#ff0055', pm10: '#8c4af0', pm25: '#27ae60'
   };
+
+  constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.updateGraph(); 
@@ -59,30 +58,39 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
       mode: 'range',
       dateFormat: 'Y-m-d'
     });
+    
+    setTimeout(() => {
+      if (this.chartInstance) {
+        this.chartInstance.reflow();
+      }
+    }, 500);
   }
 
-  applyFilter() {
-    const dateInput: string = this.datepicker.nativeElement.value;
+  chartCallback: Highcharts.ChartCallbackFunction = (chart) => {
+    this.chartInstance = chart;
+  };
+
+  applyFilter(dateInput: string) {
+    console.log('Filter applied for:', this.title, 'Value:', dateInput); // Debug check
+  
     if (!dateInput || !dateInput.includes("to")) {
-      console.warn("Invalid date range selected");
+      console.warn('Invalid date range');
       return;
     }
+    
     const [start, end] = dateInput.split("to").map(d => d.trim());
     this.dateFilterChanged.emit({ start, end });
   }
 
-
   updateGraph() {
-    if (!this.graphData || this.graphData.length === 0) {
-      this.options = {};
-      return;
-    }
-  
+    if (!this.graphData || this.graphData.length === 0) return;
+
     const allKeys = Object.keys(this.graphData[0]);
     const sensorKeys = allKeys.filter(key => 
       !['Date', 'Time', 'name', 'displayTime'].includes(key)
     );
-  
+
+    // Update Table Data
     this.tableData = sensorKeys.map(key => {
       const values = this.graphData.map(d => d[key]).filter(v => typeof v === 'number');
       return {
@@ -94,48 +102,74 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
         unit: 'ppm'
       };
     });
-  
-    const dynamicSeries = sensorKeys.map(key => ({
+
+    // Create Series
+    const dynamicSeries: Highcharts.SeriesOptionsType[] = sensorKeys.map(key => ({
       name: key,
       type: 'line',
       data: this.graphData.map(d => d[key] ?? 0),
-      symbol: 'circle', 
-      symbolSize: 4,     
-      smooth: false,
-      lineStyle: { 
-        width: 1.5,
-        opacity: 0.7
-      }
+      color: this.SENSOR_COLORS[key.toLowerCase()] || undefined,
+      marker: { enabled: false }, 
+      lineWidth: 1.5
     }));
-  
-    this.options = {
-      animation: false,
-      tooltip: { trigger: 'axis', confine: true },
-      legend: {
-        type: 'scroll',
-        top: 0, 
-        padding: [0, 5]
+
+    // Define Chart Options
+    this.chartOptions = {
+      chart: { 
+        height: 320, 
+        spacingBottom: 15,
+        marginTop: 10,
+        backgroundColor: 'transparent'
       },
-      grid: { 
-        top: 40,    
-        bottom: 40, 
-        left: 45,   
-        right: 15,
-        containLabel: true 
+      title: { text: '' },
+      credits: { enabled: false },
+      tooltip: { 
+        shared: true, 
+        outside: true 
+      },
+      legend: {
+        enabled: true,
+        verticalAlign: 'bottom',
+        layout: 'horizontal',
+        maxHeight: 80, // Slightly taller to see more sensors
+        itemStyle: { fontSize: '10px', fontWeight: 'normal' },
+        navigation: {
+          activeColor: '#1e3a8a',
+          arrowSize: 12
+        }
       },
       xAxis: {
-        type: 'category',
-        data: this.graphData.map(d => d.name),
-        axisLabel: { 
-          rotate: 0, 
-          fontSize: 10,
-          margin: 8 
-        }},
-      yAxis: { 
-        type: 'value',
-        splitLine: { lineStyle: { type: 'dashed' } }
+        categories: this.graphData.map(d => d.name),
+        crosshair: true,
+        labels: { 
+          rotation: -45, 
+          style: { fontSize: '9px' } 
+        }
       },
-      series: dynamicSeries
+      yAxis: { 
+        title: { text: null },
+        gridLineDashStyle: 'Dash',
+        labels: { style: { fontSize: '10px' } }
+      },
+      series: dynamicSeries,
+      plotOptions: {
+        line: { 
+          animation: false,
+          events: {
+            legendItemClick: function () {
+             
+            }
+          }
+        },
+        series: { 
+          states: { 
+            inactive: { opacity: 0.2 }
+          } 
+        }
+      }
     };
+
+    this.updateFlag = true;
+    this.cdr.detectChanges();
   }
 }

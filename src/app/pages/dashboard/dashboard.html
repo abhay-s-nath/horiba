@@ -1,9 +1,5 @@
 <div class="dashboard-page">
-
-  <!-- KPI + GAUGE SECTION -->
   <div class="top-metrics-group">
-
-    <!-- 3x2 KPI GRID -->
     @if (kpisLoading) {
       <mat-progress-spinner 
       color="primary" 
@@ -26,13 +22,11 @@
     
 
 
-    <!-- Gauge on the right -->
     <div class="gauge-container">
       <gauge-chart [value]="35"></gauge-chart>
     </div>
   </div>
 
-  <!-- GRAPHS SECTION -->
    <div class="graphs-section">
     <analytics-graph title="DAY DATE & TIME"
       (dateFilterChanged)="applyDateFilter($event, 'day')"
@@ -41,11 +35,13 @@
     </analytics-graph>
 
     <analytics-graph title="WEEK DATE & TIME"
+    (dateFilterChanged)="applyDateFilter($event, 'week')"
     [graphData]="weekGraph"
     [tableData]="weekTable">
     </analytics-graph>
 
     <analytics-graph title="MONTH DATE & TIME"
+    (dateFilterChanged)="applyDateFilter($event, 'month')"
     [graphData]="monthGraph"
     [tableData]="monthTable">
     </analytics-graph>
