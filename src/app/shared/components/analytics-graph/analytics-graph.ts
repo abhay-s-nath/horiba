@@ -51,13 +51,19 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
       this.updateGraph();
     }
   }
+  @Input() defaultRange: { start: string, end: string } | null = null;
 
   ngAfterViewInit() {
-    flatpickr(this.datepicker.nativeElement, {
+    const fp = flatpickr(this.datepicker.nativeElement, {
       altInput: true,
       mode: 'range',
-      dateFormat: 'Y-m-d'
+      dateFormat: 'Y-m-d',
+      altFormat: 'F j, Y',
     });
+
+    if (this.defaultRange) {
+      fp.setDate([this.defaultRange.start, this.defaultRange.end]);
+    }
     
     setTimeout(() => {
       if (this.chartInstance) {

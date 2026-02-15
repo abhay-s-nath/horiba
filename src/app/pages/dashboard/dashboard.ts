@@ -43,23 +43,36 @@ export class Dashboard implements OnInit {
   /**
    * Initializes the dashboard with current date ranges
    */
-  private initDashboard(): void {
-    this.loadKPIs();
-    
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-    
-    const lastWeek = new Date();
-    lastWeek.setDate(today.getDate() - 7);
+// Define variables to hold the current active ranges
+dayRange = { start: '', end: '' };
+weekRange = { start: '', end: '' };
+monthRange = { start: '', end: '' };
+
+private initDashboard(): void {
+  this.loadKPIs();
   
-    const formatDate = (date: Date) => date.toISOString().split('T')[0];
-  
-    // Initial data fetch
-    this.loadGraphData('day', formatDate(yesterday), formatDate(today));
-    this.loadGraphData('week', formatDate(lastWeek), formatDate(today));
-    this.loadGraphData('month', '2025-12-01', formatDate(today));
-  }
+  const today = new Date();
+  const formatDate = (date: Date) => date.toISOString().split('T')[0];
+  const todayStr = formatDate(today);
+
+  // Calculate Day Range (Yesterday to Today)
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  this.dayRange = { start: formatDate(yesterday), end: todayStr };
+
+  // Calculate Week Range
+  const lastWeek = new Date();
+  lastWeek.setDate(today.getDate() - 7);
+  this.weekRange = { start: formatDate(lastWeek), end: todayStr };
+
+  // Calculate Month Range
+  this.monthRange = { start: '2025-12-01', end: todayStr };
+
+  // Trigger loads using these stored ranges
+  this.loadGraphData('day', this.dayRange.start, this.dayRange.end);
+  this.loadGraphData('week', this.weekRange.start, this.weekRange.end);
+  this.loadGraphData('month', this.monthRange.start, this.monthRange.end);
+}
 
   /**
    * Fetches and calculates KPI metrics from live device data
