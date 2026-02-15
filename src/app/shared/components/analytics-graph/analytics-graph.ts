@@ -123,9 +123,20 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
       },
       title: { text: '' },
       credits: { enabled: false },
-      tooltip: { 
-        shared: true, 
-        outside: true 
+      tooltip: {
+        shared: true,
+        outside: true,
+        useHTML: true,
+        headerFormat: '<div class="custom-tooltip-header">{point.key}</div>',
+        pointFormat: `
+          <div style="display: flex; justify-content: space-between; gap: 10px; padding: 2px 0;">
+            <span style="color:{point.color}">\u25CF</span> {series.name}: 
+            <b>{point.y}</b>
+          </div>`,
+        footerFormat: '',
+        style: {
+          pointerEvents: 'auto'
+        }
       },
       legend: {
         enabled: true,

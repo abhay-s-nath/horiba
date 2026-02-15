@@ -156,3 +156,30 @@
   background: #cbd5e1;
   border-radius: 10px;
 }
+
+::ng-deep .highcharts-tooltip-container .highcharts-tooltip > span {
+  max-height: 250px;
+  overflow-y: auto !important;
+  display: block;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #1e3a8a;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+::ng-deep .highcharts-tooltip > span::-webkit-scrollbar {
+  width: 4px;
+}
+::ng-deep .highcharts-tooltip > span::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.custom-tooltip-header {
+  font-weight: bold;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 5px;
+  padding-bottom: 3px;
+  color: #333;
+}
