@@ -27,6 +27,13 @@ export class DevicesComponent implements OnInit, OnDestroy {
     this.dataSubscription = interval(30000).subscribe(() => this.loadData());
   }
 
+  expandedDeviceId: any = null;
+
+  toggleExpand(event: Event, deviceId: any) {
+    event.stopPropagation();
+    this.expandedDeviceId = this.expandedDeviceId === deviceId ? null : deviceId;
+  }
+
   loadData() {
     this.deviceService.getLiveData().subscribe({
       next: (response: LiveDataResponse) => {
@@ -41,8 +48,10 @@ export class DevicesComponent implements OnInit, OnDestroy {
     });
   }
 
-  goToDeviceDetail(device: DeviceData) {
-    this.router.navigate(['/device-detail', device.deviceId]);
+  goToDeviceDetail(device: any) {
+    this.router.navigate(['/device-detail', device.deviceId], { 
+      state: { data: device } 
+    });
   }
 
   ngOnDestroy() {

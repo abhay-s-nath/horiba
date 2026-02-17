@@ -1,23 +1,29 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-
-import { DEVICES } from '../../dummy-data/devices';  // Your devices data
 
 @Component({
   selector: 'app-device-detail',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './device-detail.html',
-  imports:[CommonModule],
   styleUrls: ['./device-detail.css']
 })
 export class DeviceDetailComponent implements OnInit {
+  device: any = null;
 
-  device: any;
-
-  constructor(private route: ActivatedRoute) {}
+  constructor(private route: ActivatedRoute, private router: Router) {
+    const navigation = this.router.getCurrentNavigation();
+    if (navigation?.extras.state?.['data']) {
+      this.device = navigation.extras.state['data'];
+    }
+  }
 
   ngOnInit() {
-    const deviceId = this.route.snapshot.paramMap.get('id');  // Get device ID from route
-    this.device = DEVICES.find(dev => dev.id === deviceId);  // Find the device by ID
+    // console.log('Live API Device Data:', this.device);
+  }
+
+  goBack() {
+    this.router.navigate(['//devices']);
   }
 }
