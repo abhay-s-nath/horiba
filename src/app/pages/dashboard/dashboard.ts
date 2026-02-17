@@ -1,10 +1,18 @@
-import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { KpiTile } from '../../shared/components/kpi-tile/kpi-tile';
 import { GaugeChartComponent } from '../../shared/components/gauge-chart/gauge-chart';
 import { AnalyticsGraph } from '../../shared/components/analytics-graph/analytics-graph';
 import { LiveDataService } from '../../services/live-data.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+
+interface KpiData {
+  label: string;
+  value: string | number;
+  color: string;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -14,25 +22,31 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     KpiTile,
     GaugeChartComponent,
     AnalyticsGraph,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatSnackBarModule
   ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
-export class Dashboard implements OnInit {
-  // KPI State
-  kpis: any[] = [];
-  kpisLoading = true;
+export class Dashboard implements OnInit, OnDestroy {
+  public kpis: KpiData[] = [];
+  public kpisLoading = true;
+  public connectionRate: number = 0;
 
-  // Graph and Table State
-  dayGraph: any[] = [];
-  dayTable: any[] = [];
-  weekGraph: any[] = [];
-  weekTable: any[] = [];
-  monthGraph: any[] = [];
-  monthTable: any[] = [];
+  public dayRange = { start: '', end: '' };
+  public weekRange = { start: '', end: '' };
+  public monthRange = { start: '', end: '' };
 
+  public dayGraph: any[] = [];
+  public dayTable: any[] = [];
+  public weekGraph: any[] = [];
+  public weekTable: any[] = [];
+  public monthGraph: any[] = [];
+  public monthTable: any[] = [];
+
+  private subscriptions: Subscription = new Subscription();
   private cdr = inject(ChangeDetectorRef);
+  private snackBar = inject(MatSnackBar);
 
   constructor(private liveDataService: LiveDataService) { }
 
@@ -40,54 +54,49 @@ export class Dashboard implements OnInit {
     this.initDashboard();
   }
 
-  /**
-   * Initializes the dashboard with current date ranges
-   */
-// Define variables to hold the current active ranges
-dayRange = { start: '', end: '' };
-weekRange = { start: '', end: '' };
-monthRange = { start: '', end: '' };
 
-private initDashboard(): void {
-  this.loadKPIs();
-  
-  const today = new Date();
-  const formatDate = (date: Date) => date.toISOString().split('T')[0];
-  const todayStr = formatDate(today);
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
 
-  // Calculate Day Range (Yesterday to Today)
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
-  this.dayRange = { start: formatDate(yesterday), end: todayStr };
+  private initDashboard(): void {
+    this.loadKPIs();
+    
+    const today = new Date();
+    const formatDate = (date: Date) => date.toISOString().split('T')[0];
+    const todayStr = formatDate(today);
 
-  // Calculate Week Range
-  const lastWeek = new Date();
-  lastWeek.setDate(today.getDate() - 7);
-  this.weekRange = { start: formatDate(lastWeek), end: todayStr };
+    // Calculate Day Range (Yesterday to Today)
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    this.dayRange = { start: formatDate(yesterday), end: todayStr };
+    
+    // Calculate Week Range (7 days ago to Today)
+    const lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 7);
+    this.weekRange = { start: formatDate(lastWeek), end: todayStr };
 
-  // Calculate Month Range
-  this.monthRange = { start: '2025-12-01', end: todayStr };
+    // Calculate Month Range (Dynamically find 1st of current month)
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    this.monthRange = { start: formatDate(startOfMonth), end: todayStr };
 
-  // Trigger loads using these stored ranges
-  this.loadGraphData('day', this.dayRange.start, this.dayRange.end);
-  this.loadGraphData('week', this.weekRange.start, this.weekRange.end);
-  this.loadGraphData('month', this.monthRange.start, this.monthRange.end);
-}
+    // Trigger loads using the dynamic ranges
+    this.loadGraphData('day', this.dayRange.start, this.dayRange.end);
+    this.loadGraphData('week', this.weekRange.start, this.weekRange.end);
+    this.loadGraphData('month', this.monthRange.start, this.monthRange.end);
+  }
 
-  /**
-   * Fetches and calculates KPI metrics from live device data
-   */
-  loadKPIs(): void {
+
+  public loadKPIs(): void {
     this.kpisLoading = true;
-    this.liveDataService.getLiveData().subscribe({
+    const kpiSub = this.liveDataService.getLiveData().subscribe({
       next: (res) => {
         const devices = res.deviceData || [];
         const totalDevices = devices.length;
         const airDevices = devices.filter((d: any) => d.deviceType === 'AAQMS Device');
         const waterDevices = devices.filter((d: any) => d.deviceType === 'WQMS Device');
         const connectedDevices = devices.filter((d: any) => d.deviceStatusId === 1).length;
-        const disconnectedDevices = totalDevices - connectedDevices;
-  
+        
         let totalSensors = 0;
         let connectedSensors = 0; 
         
@@ -98,41 +107,42 @@ private initDashboard(): void {
           }
         });
         
-        const disconnectedSensors = totalSensors - connectedSensors;
-  
         this.kpis = [
           { label: 'Total Devices', value: totalDevices, color: '#2371C7' },
           { label: 'Air Devices', value: airDevices.length, color: '#16a34a' },
           { label: 'Water Devices', value: waterDevices.length, color: '#0891b2' },
           { label: 'Connected Devices', value: connectedDevices, color: '#2563eb' },
-          { label: 'Disconnected Devices', value: disconnectedDevices, color: '#dc2626' },
+          { label: 'Disconnected Devices', value: totalDevices - connectedDevices, color: '#dc2626' },
           { label: 'Total Sensors', value: totalSensors, color: '#2371C7' },
           { label: 'Connected Sensors', value: connectedSensors, color: '#16a34a' },
-          { label: 'Disconnected Sensors', value: disconnectedSensors, color: '#dc2626' },
+          { label: 'Disconnected Sensors', value: totalSensors - connectedSensors, color: '#dc2626' },
         ];
+
+        this.connectionRate = totalDevices > 0 
+          ? Math.round((connectedDevices / totalDevices) * 100) 
+          : 0;
 
         this.kpisLoading = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.kpisLoading = false;
+        this.snackBar.open('Failed to load KPI data.', 'Close', { duration: 5000 });
         console.error('CRITICAL: KPI Data Load Failed', err);
         this.kpis = [{ label: 'Error', value: '--', color: 'gray' }];
       }
     });
+    this.subscriptions.add(kpiSub);
   }
 
-  /**
-   * Fetches historical data and routes it to the correct graph state
-   */
-  loadGraphData(type: 'day' | 'week' | 'month', startDate: string, endDate: string): void {
+
+  public loadGraphData(type: 'day' | 'week' | 'month', startDate: string, endDate: string): void {
     const interval = type === 'month' ? 86400 : 3600;
   
-    this.liveDataService.getLoggedData(startDate, endDate, interval).subscribe({
+    const graphSub = this.liveDataService.getLoggedData(startDate, endDate, interval).subscribe({
       next: (res: any) => {
         let parsedData: any[] = [];
 
-        // Determine if response is Array of Strings (CSV) or Raw String
         if (Array.isArray(res) && res.length > 0) {
           parsedData = this.parseCsvArray(res);
         } else if (typeof res === 'string' && res.trim() !== '') {
@@ -140,45 +150,27 @@ private initDashboard(): void {
           parsedData = this.parseCsvArray(lines);
         }
 
-        if (!parsedData || parsedData.length === 0) {
-          console.warn(`⚠️ Dashboard [${type}]: Response received but no valid rows parsed.`);
-          return;
-        }
+        if (!parsedData || parsedData.length === 0) return;
 
-        // Production-level state update using fresh references
         const dataUpdate = [...parsedData];
         
-        switch (type) {
-          case 'day':
-            this.dayGraph = dataUpdate;
-            this.dayTable = dataUpdate;
-            break;
-          case 'week':
-            this.weekGraph = dataUpdate;
-            this.weekTable = dataUpdate;
-            break;
-          case 'month':
-            this.monthGraph = dataUpdate;
-            this.monthTable = dataUpdate;
-            break;
-        }
+        if (type === 'day') { this.dayGraph = dataUpdate; this.dayTable = dataUpdate; }
+        else if (type === 'week') { this.weekGraph = dataUpdate; this.weekTable = dataUpdate; }
+        else if (type === 'month') { this.monthGraph = dataUpdate; this.monthTable = dataUpdate; }
 
-        // console.log(`✅ Dashboard [${type}]: Successfully loaded ${parsedData.length} records.`);
         this.cdr.detectChanges();
       },
       error: (err) => {
+        this.snackBar.open(`Error loading ${type} analytics.`, 'Retry', { duration: 3000 });
         console.error(`❌ Dashboard [${type}]: Request failed`, err);
       }
     });
+    this.subscriptions.add(graphSub);
   }
   
-  /**
-   * Core Parser: Converts Array of CSV strings into JSON objects
-   */
+
   private parseCsvArray(rows: string[]): any[] {
     if (!rows || rows.length < 2) return [];
-  
-    // Extract headers from index 0
     const headers = rows[0].split(',').map(h => h.trim());
   
     return rows.slice(1).map((row, rowIndex) => {
@@ -187,25 +179,19 @@ private initDashboard(): void {
       
       headers.forEach((header, index) => {
         const rawVal = values[index] ? values[index].trim() : '';
-        
-        // Logical conversion: Only columns that aren't Date/Time should be numbers
         if (header !== 'Date' && header !== 'Time' && rawVal !== '' && !isNaN(Number(rawVal))) {
           obj[header] = Number(rawVal);
         } else {
           obj[header] = rawVal || null;
         }
       });
-  
-      // Ensure name field exists for ECharts Axis (Map from backend 'Time')
       obj['name'] = obj['Time'] || `Point ${rowIndex}`;
       return obj;
-    }).filter(item => item['Date'] !== null); // Clean up any trailing empty rows
+    }).filter(item => item['Date'] !== null);
   }
 
-  /**
-   * Filter trigger from UI datepicker
-   */
-  applyDateFilter(range: { start: string, end: string }, type: 'day' | 'week' | 'month'): void {
+
+  public applyDateFilter(range: { start: string, end: string }, type: 'day' | 'week' | 'month'): void {
     if (range.start && range.end) {
       this.loadGraphData(type, range.start, range.end);
     }
