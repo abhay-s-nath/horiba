@@ -10,20 +10,32 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./device-detail.css']
 })
 export class DeviceDetailComponent implements OnInit {
-  device: any = null;
+  public device: any = null;
 
-  constructor(private route: ActivatedRoute, private router: Router) {
+  constructor(
+    private route: ActivatedRoute, 
+    private router: Router,
+  ) {
     const navigation = this.router.getCurrentNavigation();
-    if (navigation?.extras.state?.['data']) {
-      this.device = navigation.extras.state['data'];
+    const stateData = navigation?.extras.state?.['data'];
+
+    if (stateData) {
+      this.device = stateData;
     }
   }
 
-  ngOnInit() {
-    // console.log('Live API Device Data:', this.device);
+  public ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    
+    if (!id && !this.device) {
+      console.error('Device ID is null and no state data found. Redirecting...');
+      this.router.navigate(['/devices']);
+      return;
+    }
+
   }
 
-  goBack() {
-    this.router.navigate(['//devices']);
+  public goBack(): void {
+    this.router.navigate(['/devices']);
   }
 }
