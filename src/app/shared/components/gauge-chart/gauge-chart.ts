@@ -14,29 +14,30 @@ HighchartsMore(Highcharts);
   styleUrls: ['./gauge-chart.css']
 })
 export class GaugeChartComponent implements OnInit, AfterViewInit {
-  Highcharts: typeof Highcharts = Highcharts;
-  chartOptions: Highcharts.Options = {};
-  updateFlag: boolean = false;
-  chartInstance!: Highcharts.Chart;
+  public Highcharts: typeof Highcharts = Highcharts;
+  public chartOptions: Highcharts.Options = {};
+  public updateFlag: boolean = false;
+  public chartInstance!: Highcharts.Chart;
 
-  @Input() set value(val: number) {
+  @Input() public set value(val: number) {
     this._value = val;
     this.updateChart();
   }
-  get value(): number { return this._value; }
+  public get value(): number { return this._value; }
   private _value: number = 50;
 
   constructor(private cdr: ChangeDetectorRef) {}
 
-  ngOnInit() {
+  public ngOnInit(): void {
     this.updateChart();
   }
 
-  chartCallback: Highcharts.ChartCallbackFunction = (chart) => {
+  public chartCallback: Highcharts.ChartCallbackFunction = (chart) => {
     this.chartInstance = chart;
   };
 
-  updateChart() {
+
+  public updateChart(): void {
     this.chartOptions = {
       chart: {
         type: 'gauge',
@@ -99,7 +100,7 @@ export class GaugeChartComponent implements OnInit, AfterViewInit {
     this.cdr.detectChanges();
   }
 
-  ngAfterViewInit() {
+  public ngAfterViewInit(): void {
     setTimeout(() => {
       if (this.chartInstance) {
         this.chartInstance.reflow();

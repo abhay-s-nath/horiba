@@ -37,12 +37,12 @@
     </thead>
     <tbody>
       <tr *ngFor="let row of tableData">
-        <td>{{ row.component }}</td>
-        <td>{{ row.avg }}</td>
-        <td>{{ row.min }}</td>
-        <td>{{ row.max }}</td>
-        <td>{{ row.limit }}</td>
-        <td>{{ row.unit }}</td>
+        <td>{{ row.component || '--' }}</td>
+        <td>{{ row.avg || '--'}}</td>
+        <td>{{ row.min || '--'}}</td>
+        <td>{{ row.max || '--'}}</td>
+        <td>{{ row.limit || '--'}}</td>
+        <td>{{ row.unit || '--'}}</td>
       </tr>
     </tbody>
   </table>

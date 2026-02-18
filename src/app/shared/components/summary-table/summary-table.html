@@ -1,6 +1,5 @@
 <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
 
-  <!-- HEADER -->
   <thead class="bg-gray-100">
     <tr>
       <th class="p-2 text-left">Component</th>
@@ -12,18 +11,15 @@
     </tr>
   </thead>
 
-  <!-- BODY -->
   <tbody>
 
-    <!-- ❤️ THIS WAS MISSING -->
     <tr *ngFor="let row of data" class="border-b">
 
-      <td class="p-2">{{ row.component }}</td>
-      <td class="p-2">{{ row.avg }}</td>
-      <td class="p-2">{{ row.min }}</td>
-      <td class="p-2">{{ row.max }}</td>
+      <td class="p-2">{{ row.component  || '--' }}</td>
+      <td class="p-2">{{ row.avg  || '--'}}</td>
+      <td class="p-2">{{ row.min  || '--'}}</td>
+      <td class="p-2">{{ row.max  || '--'}}</td>
 
-      <!-- Editable regulatory limit -->
       <td class="p-2">
         <input
           type="number"
@@ -37,3 +33,4 @@
   </tbody>
 
 </table>
+<!-- currently this file is not using -->

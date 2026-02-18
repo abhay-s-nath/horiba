@@ -4,3 +4,15 @@
   display: block;
   overflow: hidden;
 }
+
+.no-data-placeholder {
+  text-align: center;
+  color: #6b7280;
+  font-family: sans-serif;
+}
+
+.no-data-placeholder p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}

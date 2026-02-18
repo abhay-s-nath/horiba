@@ -12,12 +12,11 @@ export class Sidebar {
 
   constructor(private router: Router) {}
 
-  navigateTo(path: string) {
+  public navigateTo(path: string): void {
     this.router.navigate([path]);
   }
 
-  isActive(path: string): boolean {
-    // Dashboard path ('') must be handled carefully
+  public isActive(path: string): boolean {
     if (path === '') {
       return this.router.url === '/';
     }
