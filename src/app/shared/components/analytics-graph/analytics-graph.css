@@ -14,17 +14,24 @@
 .graph-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  flex-shrink: 0;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.title-wrapper {
+  flex: 1;                
+  min-width: 120px;
 }
 
 .title {
-  font-size: 14px;
+  font-size: 13px; 
   font-weight: 700;
   color: #1e3a8a;
   text-transform: uppercase;
   margin: 0;
+  line-height: 1.2;  
 }
 
 .graph-box {
@@ -98,19 +105,24 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-shrink: 0;         
 }
 
 .date-input {
-  padding: 8px 12px;
+  padding: 8px 10px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
-  font-size: 12px;
-  color: #64748b;
+  font-size: 11px;
+  color: #334155;
   outline: none;
+  width: 160px;
+  background-color: #f8fafc;
 }
 
 .filter-btn {
   background-color: #1e3a8a;
+  padding: 0 12px;
+  height: 34px;
   color: white;
   border: none;
   border-radius: 6px;
@@ -119,7 +131,6 @@
   cursor: pointer;
   transition: background 0.2s;
   min-width: 80px;
-  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
