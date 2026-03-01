@@ -7,6 +7,7 @@ import { AnalyticsGraph } from '../../shared/components/analytics-graph/analytic
 import { LiveDataService } from '../../services/live-data.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { isDevMode } from '@angular/core';
 
 interface KpiData {
   label: string;
@@ -128,7 +129,9 @@ export class Dashboard implements OnInit, OnDestroy {
       error: (err) => {
         this.kpisLoading = false;
         this.snackBar.open('Failed to load KPI data.', 'Close', { duration: 5000 });
-        console.error('CRITICAL: KPI Data Load Failed', err);
+        if (isDevMode()) {
+          console.error('CRITICAL: KPI Data Load Failed', err);
+        }
         this.kpis = [{ label: 'Error', value: '--', color: 'gray' }];
       }
     });
@@ -162,7 +165,9 @@ export class Dashboard implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.snackBar.open(`Error loading ${type} analytics.`, 'Retry', { duration: 3000 });
-        console.error(`❌ Dashboard [${type}]: Request failed`, err);
+        if (isDevMode()) {
+          console.error(`❌ Dashboard [${type}]: Request failed`, err);
+        }
       }
     });
     this.subscriptions.add(graphSub);

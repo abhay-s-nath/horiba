@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { isDevMode } from '@angular/core';
 
 @Component({
   selector: 'app-device-detail',
@@ -28,7 +29,9 @@ export class DeviceDetailComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
     
     if (!id && !this.device) {
-      console.error('Device ID is null and no state data found. Redirecting...');
+      if (isDevMode()) {
+        console.error('Device ID is null and no state data found. Redirecting...');
+      }
       this.router.navigate(['/devices']);
       return;
     }

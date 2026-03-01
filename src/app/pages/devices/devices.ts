@@ -4,6 +4,7 @@ import { DatePipe, CommonModule } from '@angular/common';
 import { DeviceService } from '../../core/services/device'; 
 import { DeviceData, LiveDataResponse } from '../../models/live-data.model';
 import { Subscription, interval } from 'rxjs';
+import { isDevMode } from '@angular/core';
 
 @Component({
   selector: 'app-devices',
@@ -51,7 +52,9 @@ export class DevicesComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = 'Failed to load device data. Please try again later.'; 
-        console.error('API Error:', err);
+        if (isDevMode()) {
+          console.error('API Error:', err);
+        }
       }
     });
   }

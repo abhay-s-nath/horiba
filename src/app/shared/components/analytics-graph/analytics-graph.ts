@@ -70,7 +70,7 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
       altInput: true,
       mode: 'range',
       dateFormat: 'Y-m-d',
-      altFormat: 'F j, Y',
+      altFormat: 'm/d/y',
       onChange: (selectedDates) => {
         this.isDateRangeValid = selectedDates.length === 2;
       }
@@ -128,7 +128,10 @@ export class AnalyticsGraph implements OnInit, OnChanges, AfterViewInit {
 
     this.chartOptions = {
       title: { text: '' },
-      series: dynamicSeries
+      series: dynamicSeries,
+      credits: {
+        enabled: false
+      }
     };
 
     this.updateFlag = true;
